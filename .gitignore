@@ -1,0 +1,4 @@
+.env
+dcBot/.env
+__pycache__/
+*.pyc

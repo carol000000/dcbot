@@ -131,6 +131,7 @@ async def on_message(message):
         await message.channel.send(f"{message.author.mention}罵髒話")
 
 ##-------------------------------------------------------------------------------------------------------------------------------------------------------
+    @gua.event
     async def on_message(message):
         if message.author == bot.user:
                 return
@@ -156,19 +157,12 @@ async def on_message(message):
 
             if log_channel:
                 await log_channel.send(
-                    f' 使用者 <@{message.author}> 在 <#{monitored_channel_id}> 發言，已被自動踢出伺服器。'
+                    f' 使用者 <@{message.author.id}> 在 <#{monitored_channel_id}> 發言，已被自動踢出伺服器。'
                 )
 
         except Exception as e:
             print(f'Failed to kick {message.author}: {e}')
 
-    await bot.process_commands(message)
-
-
-##-------------------------------------------------------------------------------------------------------------------------------------------------------
-    async def on_message(message):
-        if message.author == bot.user:
-                return
 
     # 被監控的頻道
     c_monitored_channel_id = 1473947270050353298
@@ -188,10 +182,11 @@ async def on_message(message):
 
             # 取得通知頻道
             log_channel = message.guild.get_channel(c_log_channel_id)
+            
 
             if log_channel:
                 await log_channel.send(
-                    f' 使用者 <@{message.author}> 在 <#{monitored_channel_id}> 發言，已被自動踢出伺服器。'
+                    f' 使用者 <@{message.author.id}> 在 <#{monitored_channel_id}> 發言，已被自動踢出伺服器。'
                 )
 
         except Exception as e:

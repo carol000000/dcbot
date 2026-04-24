@@ -1,11 +1,10 @@
 # This example requires the 'message_content' intent.
-import datetime
+
 import discord
 from discord.ext import commands
 import random
 import asyncio
 from discord import app_commands
-from datetime import datetime, timedelta, timezone
 
 import os
 from dotenv import load_dotenv
@@ -23,11 +22,11 @@ client = discord.Client(intents=intents)
 intents = discord.Intents.default()
 intents.message_content = True
 gua = discord.Client(intents=intents)
-gua = commands.bot(command_prefix="!",intents=intents)
+bot = commands.Bot(command_prefix="!",intents=intents)
 
 
 
-class MyBot(commands.bot):
+class MyBot(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix="!", intents=intents)
 
@@ -132,77 +131,68 @@ async def on_message(message):
         await message.channel.send(f"{message.author.mention}罵髒話")
 
 ##-------------------------------------------------------------------------------------------------------------------------------------------------------
-@gua.event
+ 
 async def on_message(message):
-        if message.author == gua.user:
-            return
-
-        # 被監控的頻道
-        monitored_channel_id = 1410282161767972925
-        # 通知管理員的頻道
-        log_channel_id = 1414046699319722027
-
-        if message.channel.id == monitored_channel_id:
-
-            # 不動管理員
-            if message.author.guild_permissions.administrator:
+    if message.author == bot.user:
                 return
-
-            try:
-             # BAN + 刪最近訊息
-                await message.guild.ban(
-                    message.author,
-                    reason="Auto ban",
-                    delete_message_days=1  # 可改 0~7
-                )
-
-                print(f'ban {message.author}')
-
-                log_channel = message.guild.get_channel(log_channel_id)
-
-                if log_channel:
-                    await log_channel.send(
-                        f'使用者 <@{message.author.id}> 在 <#{monitored_channel_id}> 發言，已被封鎖並清除訊息。'
-                    )
-
-            except Exception as e:
-                print(f'Failed to ban {message.author}: {e}')
-
-
-    # ================= 第二組 =================
 
     # 被監控的頻道
-        c_monitored_channel_id = 1473947270050353298
+    monitored_channel_id = 1410282161767972925
     # 通知管理員的頻道
-        c_log_channel_id = 1493576972360749136
+    log_channel_id = 1414046699319722027
 
-        if message.channel.id == c_monitored_channel_id:
+    if message.channel.id == monitored_channel_id:
 
-            # 不動管理員
-            if message.author.guild_permissions.administrator:
-                return
+        # 不踢管理員
+        if message.author.guild_permissions.administrator:
+            return
 
-            try:
-                #  BAN + 刪最近訊息
-                await message.guild.ban(
-                    message.author,
-                    reason="Auto ban",
-                    delete_message_days=1
+        try:
+            await message.author.kick(reason="Auto kick")
+
+            print(f'kick {message.author}')
+
+            # 取得通知頻道
+            log_channel = message.guild.get_channel(log_channel_id)
+
+            if log_channel:
+                await log_channel.send(
+                    f' 使用者 <@{message.author.id}> 在 <#{monitored_channel_id}> 發言，已被自動踢出伺服器。'
                 )
 
-                print(f'ban {message.author}')
+        except Exception as e:
+            print(f'Failed to kick {message.author}: {e}')
 
-                log_channel = message.guild.get_channel(c_log_channel_id)
 
-                if log_channel:
-                    await log_channel.send(
-                        f'使用者 <@{message.author.id}> 在 <#{c_monitored_channel_id}> 發言，已被封鎖並清除訊息。'
-                    )
+    # 被監控的頻道
+    c_monitored_channel_id = 1473947270050353298
+    # 通知管理員的頻道
+    c_log_channel_id = 1493576972360749136
 
-            except Exception as e:
-                print(f'Failed to ban {message.author}: {e}')
+    if message.channel.id == c_monitored_channel_id:
 
-        await gua.process_commands(message)
+        # 不踢管理員
+        if message.author.guild_permissions.administrator:
+            return
+
+        try:
+            await message.author.kick(reason="Auto kick")
+
+            print(f'kick {message.author}')
+
+            # 取得通知頻道
+            log_channel = message.guild.get_channel(c_log_channel_id)
+            
+
+            if log_channel:
+                await log_channel.send(
+                    f' 使用者 <@{message.author.id}> 在 <#{monitored_channel_id}> 發言，已被自動踢出伺服器。'
+                )
+
+        except Exception as e:
+            print(f'Failed to kick {message.author}: {e}')
+
+    await bot.process_commands(message)
 
 ##-------------------------------------------------------------------------------------------------------------------------------------------------------
 

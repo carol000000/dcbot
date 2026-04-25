@@ -16,13 +16,13 @@ TOKEN = os.getenv("TOKEN")
 # intents
 intents = discord.Intents.default()
 # client
-client = discord.Client(intents=intents)
+
 
 
 intents = discord.Intents.default()
 intents.message_content = True
 gua = discord.Client(intents=intents)
-bot = commands.Bot(command_prefix="!",intents=intents)
+
 
 
 
@@ -132,14 +132,10 @@ async def on_message(message):
 
 ##-------------------------------------------------------------------------------------------------------------------------------------------------------
  
-async def on_message(message):
-    if message.author == bot.user:
-                return
-
     # 被監控的頻道
     monitored_channel_id = 1410282161767972925
     # 通知管理員的頻道
-    log_channel_id = 1414046699319722027
+    log_channel_id = 1410282161767972925
 
     if message.channel.id == monitored_channel_id:
 
@@ -148,20 +144,28 @@ async def on_message(message):
             return
 
         try:
-            await message.author.kick(reason="Auto kick")
+             # BAN + 刪最近訊息
+            await message.guild.ban(
+                message.author,
+                reason="Auto ban",
+                delete_message_days=1  # 可改 0~7
+                )
 
-            print(f'kick {message.author}')
+            print(f'ban {message.author}')
 
-            # 取得通知頻道
             log_channel = message.guild.get_channel(log_channel_id)
 
             if log_channel:
                 await log_channel.send(
-                    f' 使用者 <@{message.author.id}> 在 <#{monitored_channel_id}> 發言，已被自動踢出伺服器。'
-                )
+                    f'<@{message.author.id}> 因為在 <#{monitored_channel_id}> 傳送訊息所以被踢了\n'
+                    '# ⛔ 不要在此頻道發言，否則您會被停權！\n'
+                    '# ⛔ 不要在此频道发言，否则您会被停权！\n'
+                    '# ⛔ Do not send message in this channel ,or you will be banned!\n'
+                    '# ⛔ このチャンネルで発言しないでください。発言すると禁止されます\n'
+                    )
 
         except Exception as e:
-            print(f'Failed to kick {message.author}: {e}')
+                print(f'Failed to ban {message.author}: {e}')
 
 
     # 被監控的頻道
@@ -176,23 +180,31 @@ async def on_message(message):
             return
 
         try:
-            await message.author.kick(reason="Auto kick")
+                #  BAN + 刪最近訊息
+            await message.guild.ban(
+                message.author,
+                reason="Auto ban",
+                delete_message_days=1
+            )
 
-            print(f'kick {message.author}')
+            print(f'ban {message.author}')
 
-            # 取得通知頻道
             log_channel = message.guild.get_channel(c_log_channel_id)
-            
 
             if log_channel:
                 await log_channel.send(
-                    f' 使用者 <@{message.author.id}> 在 <#{monitored_channel_id}> 發言，已被自動踢出伺服器。'
-                )
+                    f'<@{message.author.id}> 因為在 <#{monitored_channel_id}> 傳送訊息所以被踢了\n'
+                    '# ⛔ 不要在此頻道發言，否則您會被停權！\n'
+                    '# ⛔ 不要在此频道发言，否则您会被停权！\n'
+                    '# ⛔ Do not send message in this channel ,or you will be banned!\n'
+                    '# ⛔ このチャンネルで発言しないでください。発言すると禁止されます\n'
+                    )
 
         except Exception as e:
-            print(f'Failed to kick {message.author}: {e}')
+            print(f'Failed to ban {message.author}: {e}')
 
-    await bot.process_commands(message)
+
+    await gua.process_commands(message)
 
 ##-------------------------------------------------------------------------------------------------------------------------------------------------------
 

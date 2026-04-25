@@ -171,7 +171,7 @@ async def on_message(message):
     # 被監控的頻道
     c_monitored_channel_id = 1473947270050353298
     # 通知管理員的頻道
-    c_log_channel_id = 1493576972360749136
+    c_log_channel_id = 1473947270050353298
 
     if message.channel.id == c_monitored_channel_id:
 

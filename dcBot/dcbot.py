@@ -289,4 +289,65 @@ async def guess_game(interaction: discord.Interaction):
             await interaction.followup.send(f"{interaction.user.mention} 考慮太久了，遊戲結束。")
             break
 
+@gua.tree.command(name="比大小", description="範圍1~6")
+async def guess_game(interaction: discord.Interaction):
+    a = random.randint(1, 6)  # 玩家的點數
+    b = random.randint(1, 6)  # 機器人的點數
+    # 1. 第一次回應，先發送遊戲說明（必須在 3 秒內呼叫）
+    await interaction.response.send_message(
+    f"{interaction.user.mention} 你抽到 {a}，請輸入：\n`1` 代表比大\n`0` 代表比小"
+)
+
+    def check(m):
+        # 確保是同一個人、同個頻道，且輸入的是數字
+        return (
+            m.author == interaction.user
+            and m.channel == interaction.channel
+            and m.content.isdigit()
+        )
+
+    while True:
+        try:
+            # 2. 等待訊息
+            msg = await gua.wait_for("message", check=check, timeout=30.0)
+            user_gua = int(msg.content)
+
+            if user_gua not in [0, 1]:
+                await interaction.followup.send(
+                    "格式錯誤！請輸入 0 或 1 \n0 = 小, 1 = 大"
+                )
+                continue  # 重新循環讓玩家再輸入一次
+
+            # 產生點數
+            
+
+            # 3. 判斷勝負邏輯
+            result = f"你抽到：【{a}】 vs 機器人抽到：【{b}】\n"
+
+            if user_gua == 1:  # 玩家選擇【比大】
+                if a > b:
+                    result += " 你贏了！"
+                elif a == b:
+                    result += "平手！"
+                else:
+                    result += "你輸了！"
+
+            elif user_gua == 0:  # 玩家選擇【比小】
+                if a < b:
+                    result += "你贏了！"
+                elif a == b:
+                    result += "平手！"
+                else:
+                    result += "你輸了！"
+
+            # 4. 使用 followup 發送結果並結束遊戲
+            await interaction.followup.send(result)
+            break
+
+        except asyncio.TimeoutError:
+            await interaction.followup.send(
+                f"{interaction.user.mention} 考慮太久了，遊戲結束。"
+            )
+            break
+
 gua.run(TOKEN)

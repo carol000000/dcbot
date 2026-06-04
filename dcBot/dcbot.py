@@ -51,6 +51,18 @@ async def on_ready():
         print(f"出錯了：{e}")
 
 @gua.event
+async def on_member_join(member):
+    channel_id = 1385455325158838285
+    channel = gua.get_channel(channel_id)
+    if channel:
+        embed = discord.Embed(
+            title="有人進來了",
+            description=f"歡迎 {member.mention} 加入！",
+            color=discord.Color.green()
+)
+        embed.set_thumbnail(url=member.display_avatar.url) # 顯示新成員頭貼
+        await channel.send(embed=embed)
+@gua.event
 async def on_message(message):
     if message.author == gua.user:
         return
@@ -193,7 +205,7 @@ async def on_message(message):
 
             if log_channel:
                 await log_channel.send(
-                    f'<@{message.author.id}> 因為在 <#{monitored_channel_id}> 傳送訊息所以被踢了\n'
+                    f'<@{message.author.id}> 因為在 <#{c_monitored_channel_id}> 傳送訊息所以被踢了\n'
                     '# ⛔ 不要在此頻道發言，否則您會被停權！\n'
                     '# ⛔ 不要在此频道发言，否则您会被停权！\n'
                     '# ⛔ Do not send message in this channel ,or you will be banned!\n'
@@ -295,7 +307,7 @@ async def guess_game(interaction: discord.Interaction):
     b = random.randint(1, 6)  # 機器人的點數
     # 1. 第一次回應，先發送遊戲說明（必須在 3 秒內呼叫）
     await interaction.response.send_message(
-    f"{interaction.user.mention} 你抽到 {a}，請輸入：\n`1` 代表比大\n`0` 代表比小"
+    f"{interaction.user.mention} 你抽到 **{a}**\n請輸入：`1` 代表比大\n`0` 代表比小"
 )
 
     def check(m):

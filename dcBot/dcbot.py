@@ -46,6 +46,32 @@ def load_data():
             return json.load(f)
     except:
         return {}
+def update_all_players(data):
+
+    for uid in data:
+
+        monster = data[uid]["monster"]
+
+        monster.setdefault("level", 1)
+        monster.setdefault("exp", 0)
+
+        monster.setdefault("hp", 100)
+        monster.setdefault("max_hp", 100)
+
+        monster.setdefault("atk", 10)
+
+        monster.setdefault("luck", 1)
+
+        monster.setdefault("stone", 0)
+        monster.setdefault("mineral", 0)
+
+        monster.setdefault("seed", 0)
+        monster.setdefault("crop", 0)
+
+        data[uid].setdefault("money", 0)
+        data[uid].setdefault("last_sign_in", "")
+
+    return data
 
 def save_data(data):
     with open("player.json", "w", encoding="utf-8") as f:
@@ -74,7 +100,14 @@ def create_player(user_id, monster_name):
         "exp": 0,
         "hp": 100,
         "max_hp": 100,
-        "atk": 10
+        "atk": 10, #耐力
+        "mineral":0,
+        "crop":0,
+        "seed":0,
+        "luck":1,
+        "stone":0,
+
+
     }
 }
 
@@ -94,6 +127,15 @@ async def on_ready():
         print("成功發送訊息！")
     except Exception as e:
         print(f"出錯了：{e}")
+    data = load_data()
+
+    data = update_all_players(data)
+
+    save_data(data)
+
+    print("玩家資料更新完成")
+
+    print(f"{gua.user} 已上線")
 
 @gua.event
 async def on_member_join(member):
@@ -412,10 +454,10 @@ async def guess_game(interaction: discord.Interaction):
 
 @gua.tree.command(
     name="reg",
-    description="註冊遊戲 建立角色"
+    description="建立角色"
 )
 @app_commands.describe(
-    monster_name="你的怪物名稱"
+    monster_name="輸入名稱"
 )
 async def start_game(
     interaction: discord.Interaction,
@@ -425,7 +467,7 @@ async def start_game(
     if len(monster_name) > 20:
 
         await interaction.response.send_message(
-            f"{interaction.user.mention}怪物名稱最多20個字"
+            f"{interaction.user.mention}名稱最多20個字"
         )
         return
 
@@ -437,23 +479,24 @@ async def start_game(
         await interaction.response.send_message(
             f"""
 {interaction.user.mention}建立成功！
-你的初始怪物：
 {monster_name}
+等級=1
 HP=100/100
-攻擊力=10
+耐力=10
 金錢=0
+幸運值=1
 """
         )
 
     else:
 
         await interaction.response.send_message(
-            f"{interaction.user.mention}你已經有角色了"
+            f"{interaction.user.mention}你已經建立了"
         )
 
 @gua.tree.command(
     name="pet",
-    description="查看怪物資料"
+    description="查看資料"
 )
 async def pet(interaction: discord.Interaction):
 
@@ -464,7 +507,7 @@ async def pet(interaction: discord.Interaction):
     if uid not in data:
 
         await interaction.response.send_message(
-            "請先使用 /開始遊戲"
+            f"{interaction.user.mention}請先使用 /reg 建立角色"
         )
         return
 
@@ -472,12 +515,17 @@ async def pet(interaction: discord.Interaction):
 
     await interaction.response.send_message(
         f"""
-# {monster['name']}
-等級-{monster['level']}
-經驗-{monster['exp']}
-HP-{monster['hp']}/{monster['max_hp']}
-攻擊-{monster['atk']}
-金錢-{data[uid]['money']}
+**{monster['name']}**
+等級={monster['level']}
+經驗={monster['exp']}
+HP={monster['hp']}/{monster['max_hp']}
+幸運值={monster['luck']}
+耐力={monster['atk']}
+金錢={data[uid]['money']}
+石頭={monster['stone']}
+礦物={monster['mineral']}
+種子={monster['seed']}
+馬鈴薯={monster['crop']}
 """
     )
 
@@ -494,7 +542,7 @@ async def sign_in(interaction: discord.Interaction):
 
     if uid not in data:
         await interaction.response.send_message(
-            f"{interaction.user.mention}請先使用 /reg"
+            f"{interaction.user.mention}請先使用 /reg 建立角色"
         )
         return
 
@@ -511,12 +559,101 @@ async def sign_in(interaction: discord.Interaction):
 
     data[uid]["money"] += reward
     data[uid]["last_sign_in"] = today
+    data[uid["atk"]] = 10
 
     save_data(data)
 
     await interaction.response.send_message(
         f"{interaction.user.mention}每日簽到成功！\n"
         f"獲得 {reward} 呱！\n"
-        f"目前有 {data[uid]['money']} 呱"
+        f"目前有 {data[uid]['money']} 呱\n"
+        f"耐力恢復{data[uid["atk"]]}"
     )
+
+@gua.tree.command(name="mining", description="挖礦")
+async def mining(interaction: discord.Interaction):
+
+    data = load_data()
+    uid = str(interaction.user.id)
+
+    if uid not in data:
+        await interaction.response.send_message(
+            f"{interaction.user.mention}請先使用 /reg 建立角色"
+        )
+        return
+
+    monster = data[uid]["monster"]
+
+    luck = monster["luck"]
+    mineral = random.randint(0, luck)
+
+    if monster["atk"] <= 0:
+        await interaction.response.send_message(
+            f"**耐力不足**\n耐力:{monster['atk']}"
+        )
+        return
+
+    if mineral == 0:
+        monster["stone"] += 1
+    else:
+        monster["mineral"] += mineral
+
+    monster["atk"] -= 1
+
+    save_data(data)
+
+    await interaction.response.send_message(
+        f"耐力:{monster['atk']}\n"
+        f"石頭:{monster['stone']}\n"
+        f"礦物:{monster['mineral']}"
+    )
+
+@gua.tree.command(name="planting",description="種植")
+async def planting(interaction: discord.Interaction):
+
+    data = load_data()
+    uid = str(interaction.user.id)
+
+    if uid not in data:
+        await interaction.response.send_message(
+            f"{interaction.user.mention}請先使用 /reg 建立角色"
+        )
+        return
+
+    monster = data[uid]["monster"]   # ← 先取得 monster
+
+    if monster["seed"] <= 0:
+        await interaction.response.send_message(
+            "請先購買種子"
+        )
+        return
+
+    luck = monster["luck"]
+
+    cp = random.randint(0, luck)
+    cr = cp * luck
+
+    monster["seed"] -= 1
+    monster["crop"] += cr
+
+    save_data(data)
+
+    await interaction.response.send_message(
+        f"種子:{monster['seed']}\n"
+        f"種出 **{cr}** 個馬鈴薯\n"
+        f"目前共有 **{monster['crop']}** 個馬鈴薯"
+    )
+
+@gua.tree.command(name="shop",description="商店")
+async def shop(interaction: discord.Interaction):
+    data = load_data()
+    uid = str(interaction.user.id)
+    if uid not in data:
+        await interaction.response.send_message(
+            f"{interaction.user.mention}請先使用 /reg 建立角色"
+        )
+        return
+    await interaction.response.send_message("還沒做")
 gua.run(TOKEN)
+
+

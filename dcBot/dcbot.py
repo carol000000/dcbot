@@ -1,3 +1,50 @@
+"""
+# Eastern_Power
+Eastern_Power
+
+
+@*//                               `-+syhddmmmddhyo+:`
+//                            .+hmmdddddddddddddddmmds/`      ``...`
+//                         `/hmddddddddddddddddddddddddmy++osyhyyyhhs.
+//                       `ommddddddddddddddddddddddddddddmmdys+++syhhh:
+//           .`         /mmddddddddddddddddddddddddddddddddmmhyyyyyyyyh/
+//       `:sdNy`      .ymddddddddddddddddddddddddddddddddddddmdhhhyyyyyh-
+//   `.+hmmmddmo     -mmddddddddddddddddddddddddddddddddddddddmmhhhhhhhh+
+//  odmmdddddddms` `+mmddddddddddddddddddddddddddddddddddddddddmmddhhhhh+
+//  ymdmmmmmmmmdmmdmmdddddddddddddmmddddddddddddddddddddddddddddmd:ydhhd:
+//  :Nmmmmmmmmmmmmmmddy+::+ydddms/:::/+osydmdddddddddddddddddddddN-`:+o:
+//   ymmmmmmmmmmmmmmdo.`.``/hmm/+hdd/``````-+ydmdddddddddddddddddmy
+//   .mmmmmmmmmmmmmmh:`-o+`:hm/`-o:.```````os/./ymddddddddddddddddN`
+//    /Nmmmmmmmmmmmmh:..::-od/``dMs````````/hNm:`-ymddddddddddddddN-
+//     sNmmmmmmmmmmmd+-:/-.`..`.hh:`...``:hh..:```:NdmmmmmmmdmddddN/
+//  `::/dmmmmmmmmmmmmdo:```./d/````-..:`-mdd.````.dmdmmmmmmmmmmmdmmy
+//./::-..+dmmmmmmmmmmh/````-dNms-```..``.+/`````-dmds/:-:ohmmmmmmmmN.
+//-/.``--`/dmmmdysydmy.````omNd+.-::-...-:os:..`-hs-``.``./hmmmmmmmmd.       .os`
+///:---.`.`-/sy:```omy-````hddo` `s.``/NNNNo...`````-+o/``/dmmmmmmmmmms:..:+ymmN:
+//:/.``.``````-``./dNh/````syyyhshd-``:mNmy.````````.```./hmmmmmmmmmmmmmmmmmmmmmd
+// .::-```...````+dNNNs-```//::/+ooosyhdds.``````-----:+ydmmmmmmmmmmmmmmmmmmmmmmN:
+//   `:/````..``-shhdmms-``./::/:::::::+/``````.+dmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmd
+//     ./:-```.-oyyhyhhhy+.`.:/::::///:.````..:ymNNmmo:/ymmmmmmmmmmmmmmmmmmmmmmmmN
+//       `:y:./yyyyyyyyhh///:..--:--.````..-/ymNNNNNy.``-hNNNNNmmmmmmmmmmmmmmNmh+-
+//       `ymdyhyyyyyyhhy/---o+///:::::://oyhmNNNNNNNo```:osyho/---:ymmNNNNmho:`
+//       `+hhhhhyyyyhhs-----y--o/------:+hhhhhhhddds.````````..-..-+dNds+-`
+//         `.:+oossyyyy:---:ssoy:------+hyyyyhhyyys-``....```..--..//`
+//                    syysyysssho:-----ohyyyyhyhhyy/`````..``````-o.
+//                   `hssssssoyhhyo+++syyhhhhyyhyyh+:::-..-:::::::.
+//                   :hysssyo/yhhssyysssssyhyhhhyhdmmy....`
+//                   shyyyyyyhhhhyyyyyyyyyyhh/-+syhdo`
+//                  `hhhhhhhhhhhhhhhhhhhhhhhhy`
+//                   -:yhyyyysyhhyyyyyyyyyyyyh-
+//                     -hysssssyydsyyssssssssyh.
+//                      /hsysyyyyd-.+yyyssyyssyh-
+//          -/+oo++/-`   +hhyhhhso`  .ohyyyyyyhho:`   `-:/++++/:.
+//       -+ooooooooooso+/ssss.yy:      `//+ds/oysss+ossoooooooo+os/.
+//    `:o+:/oooooooooooooooossyh:          oyyssooooooooooooooo+/:os+`
+//   -ssoooooooooooooooooosssssy+          .hyssssssooooooooooooooooss-
+//   /syysssssssssssssssyyyyyyyh-           shyyyysyyysssssssssssssssyy
+//     `-/+ossyyyysso+/:-./++//.             .---` `.-:/+oossssoo++/:-`*@ 
+"""
+
 # This example requires the 'message_content' intent.
 import json
 import discord
@@ -14,15 +61,13 @@ load_dotenv()
 
 TOKEN = os.getenv("TOKEN")
 
-# intents
-intents = discord.Intents.default()
-# client
+
 
 
 
 intents = discord.Intents.default()
 intents.message_content = True
-gua = discord.Client(intents=intents)
+intents.members = True
 
 
 
@@ -139,9 +184,10 @@ async def on_ready():
 
 @gua.event
 async def on_member_join(member):
-    channel_id = 1385455325158838285
+    channel_id = 1385455325158838285  
     channel = gua.get_channel(channel_id)
     if channel:
+        print("有人加入")
         embed = discord.Embed(
             title="有人進來了",
             description=f"歡迎 {member.mention} 加入！",
@@ -451,7 +497,62 @@ async def guess_game(interaction: discord.Interaction):
 
 
 #--------------遊戲--------------------
+def get_player(interaction):
+    data = load_data()
 
+    uid = str(interaction.user.id)
+
+    if uid not in data:
+        return None, None, None
+
+    return data, uid, data[uid]["monster"]
+
+def add_exp(monster, exp):
+
+    monster["exp"] += exp
+
+    levelup = 0
+
+    while monster["exp"] >= monster["level"] * 100:
+
+        monster["exp"] -= monster["level"] * 100
+        monster["level"] += 1
+
+        monster["max_hp"] += 20
+        monster["hp"] = monster["max_hp"]
+
+        monster["atk"] += 1
+        monster["luck"] += 1
+
+        levelup += 1
+
+    return levelup
+
+def level_message(monster, levelup):
+
+    if levelup <= 0:
+        return ""
+
+    return (
+        f"\n\n🎉 恭喜升級！"
+        f"\n升了 {levelup} 級"
+        f"\n目前等級：{monster['level']}"
+    )
+
+async def get_player_or_reply(interaction):
+
+    data, uid, monster = get_player(interaction)
+
+    if data is None:
+
+        await interaction.response.send_message(
+            f"{interaction.user.mention}請先使用 /reg 建立角色"
+        )
+
+        return None
+
+    return data, uid, monster
+#----------------------------------------
 @gua.tree.command(
     name="reg",
     description="建立角色"
@@ -493,43 +594,41 @@ HP=100/100
         await interaction.response.send_message(
             f"{interaction.user.mention}你已經建立了"
         )
-
+#----------------------------------------------------
 @gua.tree.command(
     name="pet",
     description="查看資料"
 )
-async def pet(interaction: discord.Interaction):
+async def pet(interaction):
 
-    data = load_data()
+    result = await get_player_or_reply(interaction)
 
-    uid = str(interaction.user.id)
-
-    if uid not in data:
-
-        await interaction.response.send_message(
-            f"{interaction.user.mention}請先使用 /reg 建立角色"
-        )
+    if result is None:
         return
 
-    monster = data[uid]["monster"]
+    data, uid, monster = result
 
     await interaction.response.send_message(
         f"""
 **{monster['name']}**
-等級={monster['level']}
-經驗={monster['exp']}
-HP={monster['hp']}/{monster['max_hp']}
-幸運值={monster['luck']}
-耐力={monster['atk']}
-金錢={data[uid]['money']}
-石頭={monster['stone']}
-礦物={monster['mineral']}
-種子={monster['seed']}
-馬鈴薯={monster['crop']}
+
+等級：{monster['level']}
+EXP：{monster['exp']}/{monster['level'] * 100}
+
+HP：{monster['hp']}/{monster['max_hp']}
+耐力：{monster['atk']}
+幸運值：{monster['luck']}
+
+金錢：{data[uid]['money']} 呱
+
+石頭：{monster['stone']}
+礦物：{monster['mineral']}
+種子：{monster['seed']}
+馬鈴薯：{monster['crop']}
 """
     )
 
-
+#---------------------------------------------------------
 @gua.tree.command(
     name="signin",
     description="每日簽到"
@@ -548,7 +647,6 @@ async def sign_in(interaction: discord.Interaction):
 
     today = str(date.today())
 
-    # 今天已經簽過
     if data[uid].get("last_sign_in") == today:
         await interaction.response.send_message(
             f"{interaction.user.mention}你今天已經簽到過了！"
@@ -557,41 +655,56 @@ async def sign_in(interaction: discord.Interaction):
 
     reward = 50
 
+    monster = data[uid]["monster"]
+
     data[uid]["money"] += reward
     data[uid]["last_sign_in"] = today
-    data[uid["atk"]] = 10
+
+    monster["atk"] = 10
+    monster["hp"] = monster["max_hp"]
+
+    levelup = False
+
+    levelup = add_exp(monster, 10)
 
     save_data(data)
 
-    await interaction.response.send_message(
-        f"{interaction.user.mention}每日簽到成功！\n"
+    msg = (
+        f"{interaction.user.mention} 每日簽到成功！\n"
         f"獲得 {reward} 呱！\n"
         f"目前有 {data[uid]['money']} 呱\n"
-        f"耐力恢復{data[uid["atk"]]}"
+        f"耐力恢復至 {monster['atk']}\n"
+        f"HP恢復至 {monster['hp']}/{monster['max_hp']}\n"
+        f"經驗值：{monster['exp']}/{monster['level'] * 100}\n"
+        f"等級：{monster['level']}\n"
+        f"每天早上 8 點重置"
     )
 
+    if levelup:
+        msg += level_message(monster, levelup)
+
+    await interaction.response.send_message(msg)
+#---------------------------------------------------------
 @gua.tree.command(name="mining", description="挖礦")
-async def mining(interaction: discord.Interaction):
+async def mining(interaction):
 
-    data = load_data()
-    uid = str(interaction.user.id)
+    data, uid, monster = get_player(interaction)
 
-    if uid not in data:
+    if data is None:
         await interaction.response.send_message(
             f"{interaction.user.mention}請先使用 /reg 建立角色"
         )
         return
 
-    monster = data[uid]["monster"]
-
-    luck = monster["luck"]
-    mineral = random.randint(0, luck)
-
     if monster["atk"] <= 0:
         await interaction.response.send_message(
-            f"**耐力不足**\n耐力:{monster['atk']}"
+            f"耐力不足\n耐力:{monster['atk']}"
         )
         return
+
+    luck = monster["luck"]
+
+    mineral = random.randint(0, luck)
 
     if mineral == 0:
         monster["stone"] += 1
@@ -600,27 +713,32 @@ async def mining(interaction: discord.Interaction):
 
     monster["atk"] -= 1
 
+    levelup = add_exp(monster, 5)
+
     save_data(data)
 
-    await interaction.response.send_message(
+    msg = (
         f"耐力:{monster['atk']}\n"
         f"石頭:{monster['stone']}\n"
-        f"礦物:{monster['mineral']}"
+        f"礦物:{monster['mineral']}\n"
+        f"等級:{monster['level']}\n"
+        f"EXP:{monster['exp']}/{monster['level']*100}"
     )
 
-@gua.tree.command(name="planting",description="種植")
-async def planting(interaction: discord.Interaction):
+    msg += level_message(monster, levelup)
 
-    data = load_data()
-    uid = str(interaction.user.id)
+    await interaction.response.send_message(msg)
+#---------------------------------------------------------
+@gua.tree.command(name="planting", description="種植")
+async def planting(interaction):
 
-    if uid not in data:
+    data, uid, monster = get_player(interaction)
+
+    if data is None:
         await interaction.response.send_message(
             f"{interaction.user.mention}請先使用 /reg 建立角色"
         )
         return
-
-    monster = data[uid]["monster"]   # ← 先取得 monster
 
     if monster["seed"] <= 0:
         await interaction.response.send_message(
@@ -636,24 +754,286 @@ async def planting(interaction: discord.Interaction):
     monster["seed"] -= 1
     monster["crop"] += cr
 
+    levelup = add_exp(monster, 15)
+
     save_data(data)
 
-    await interaction.response.send_message(
+    msg = (
         f"種子:{monster['seed']}\n"
-        f"種出 **{cr}** 個馬鈴薯\n"
-        f"目前共有 **{monster['crop']}** 個馬鈴薯"
+        f"種出 {cr} 個馬鈴薯\n"
+        f"目前共有 {monster['crop']} 個馬鈴薯\n"
+        f"等級:{monster['level']}\n"
+        f"EXP:{monster['exp']}/{monster['level']*100}"
     )
 
-@gua.tree.command(name="shop",description="商店")
-async def shop(interaction: discord.Interaction):
-    data = load_data()
-    uid = str(interaction.user.id)
-    if uid not in data:
+    msg += level_message(monster, levelup)
+
+    await interaction.response.send_message(msg)
+
+
+#---------------------------------------------------------
+@gua.tree.command(
+    name="buyseed",
+    description="購買種子50/10"
+)
+async def shop(interaction):
+
+    data, uid, monster = get_player(interaction)
+
+    if data is None:
         await interaction.response.send_message(
             f"{interaction.user.mention}請先使用 /reg 建立角色"
         )
         return
-    await interaction.response.send_message("還沒做")
+
+    if data[uid]["money"] < 50:
+        await interaction.response.send_message(
+            "你需要更多的呱"
+        )
+        return
+
+    monster["seed"] += 10
+    data[uid]["money"] -= 50
+
+    save_data(data)
+
+    await interaction.response.send_message(
+        f"""
+購買成功！
+
+剩餘金錢：{data[uid]['money']} 呱
+種子：{monster['seed']}
+"""
+    )
+#---------------------------------------------------------
+@gua.tree.command(
+    name="sellstone",
+    description="賣石頭 5呱/個"
+)
+async def sellstone(interaction):
+
+    result = await get_player_or_reply(interaction)
+
+    if result is None:
+        return
+
+    data, uid, monster = result
+
+    if monster["stone"] <= 0:
+        await interaction.response.send_message(
+            "石頭不夠"
+        )
+        return
+
+    money = monster["stone"] * 5
+
+    data[uid]["money"] += money
+
+    sold = monster["stone"]
+
+    monster["stone"] = 0
+
+    save_data(data)
+
+    await interaction.response.send_message(
+        f"""
+賣出 {sold} 個石頭
+
+獲得 {money} 呱
+
+目前金錢：
+{data[uid]['money']} 呱
+"""
+    )
+
+#---------------------------------------------------------
+@gua.tree.command(
+    name="sellore",
+    description="賣礦物 20呱/個"
+)
+async def sellore(interaction):
+
+    result = await get_player_or_reply(interaction)
+
+    if result is None:
+        return
+
+    data, uid, monster = result
+
+    if monster["mineral"] <= 0:
+        await interaction.response.send_message(
+            "礦物不夠"
+        )
+        return
+
+    money = monster["mineral"] * 20
+
+    data[uid]["money"] += money
+
+    sold = monster["mineral"]
+
+    monster["mineral"] = 0
+
+    save_data(data)
+
+    await interaction.response.send_message(
+        f"""
+賣出 {sold} 個礦物
+
+獲得 {money} 呱
+
+目前金錢：
+{data[uid]['money']} 呱
+"""
+    )
+#---------------------------------------------------------
+@gua.tree.command(
+    name="sellpotato",
+    description="賣馬鈴薯 10呱/個"
+)
+async def sellpotato(interaction):
+
+    result = await get_player_or_reply(interaction)
+
+    if result is None:
+        return
+
+    data, uid, monster = result
+
+    if monster["crop"] <= 0:
+        await interaction.response.send_message(
+            "馬鈴薯不夠"
+        )
+        return
+
+    money = monster["crop"] * 10
+
+    data[uid]["money"] += money
+
+    sold = monster["crop"]
+
+    monster["crop"] = 0
+
+    save_data(data)
+
+    await interaction.response.send_message(
+        f"""
+賣出 {sold} 個馬鈴薯
+
+獲得 {money} 呱
+
+目前金錢：
+{data[uid]['money']} 呱
+"""
+    )
+
+#------------------------------------------------------------
+@gua.tree.command(
+    name="mrank",
+    description="金錢排行榜"
+)
+async def moneyrank(interaction):
+
+    data = load_data()
+
+    ranking = sorted(
+        data.items(),
+        key=lambda x: x[1]["money"],
+        reverse=True
+    )
+
+    msg = "**金錢排行榜**\n\n"
+
+    for i, (uid, player) in enumerate(ranking[:10], start=1):
+
+        name = player["monster"]["name"]
+        money = player["money"]
+
+        if i == 1:
+            medal = "🥇"
+        elif i == 2:
+            medal = "🥈"
+        elif i == 3:
+            medal = "🥉"
+        else:
+            medal = "🔹"
+
+        msg += f"{medal} {i}. {name} - {money} 呱\n"
+
+    # 顯示自己的排名
+    my_rank = None
+
+    for i, (uid, player) in enumerate(ranking, start=1):
+        if uid == str(interaction.user.id):
+            my_rank = i
+            break
+
+    if my_rank:
+        msg += f"\n你的排名：#{my_rank}"
+
+    await interaction.response.send_message(msg)
+
+#--------------------------------------------------------
+@gua.tree.command(
+    name="lrank",
+    description="等級排行榜"
+)
+async def levelrank(interaction):
+
+    data = load_data()
+
+    ranking = sorted(
+        data.items(),
+        key=lambda x: x[1]["monster"]["level"],
+        reverse=True
+    )
+
+    msg = "**等級排行榜**\n\n"
+
+    for i, (uid, player) in enumerate(ranking[:10], start=1):
+
+        name = player["monster"]["name"]
+        level = player["monster"]["level"]
+
+        if i == 1:
+            medal = "🥇"
+        elif i == 2:
+            medal = "🥈"
+        elif i == 3:
+            medal = "🥉"
+        else:
+            medal = "🔹"
+
+        msg += f"{medal} {i}. {name} - Lv.{level}\n"
+
+    my_rank = None
+
+    for i, (uid, player) in enumerate(ranking, start=1):
+        if uid == str(interaction.user.id):
+            my_rank = i
+            break
+
+    if my_rank:
+        msg += f"\n你的排名：#{my_rank}"
+
+    await interaction.response.send_message(msg)
+
 gua.run(TOKEN)
 
-
+"""
+        data[uid] = {
+        "money": 0,
+        "last_sign_in": "",
+        "monster": {
+        "name": monster_name,
+        "level": 1,
+        "exp": 0,
+        "hp": 100,
+        "max_hp": 100,
+        "atk": 10, #耐力
+        "mineral":0,
+        "crop":0,
+        "seed":0,
+        "luck":1,
+        "stone":0,
+"""

@@ -53,7 +53,7 @@ import random
 import asyncio
 from discord import app_commands
 from datetime import date
-
+import time
 import os
 from dotenv import load_dotenv
 
@@ -112,7 +112,11 @@ def update_all_players(data):
 
         monster.setdefault("seed", 0)
         monster.setdefault("crop", 0)
+        monster.setdefault("farm_stamina", 20)
+        monster.setdefault("crow_event", False)
 
+
+        
         data[uid].setdefault("money", 0)
         data[uid].setdefault("last_sign_in", "")
 
@@ -151,6 +155,8 @@ def create_player(user_id, monster_name):
         "seed":0,
         "luck":1,
         "stone":0,
+        "farm_stamina": 20,
+        "crow_event": False,
 
 
     }
@@ -159,6 +165,33 @@ def create_player(user_id, monster_name):
     save_data(data)
 
     return True
+async def farm_stamina_recovery_loop():
+    # 先等待機器人完全準備好
+    await gua.wait_until_ready()
+    print("農田耐力 while 背景循環已啟動！")
+    
+    while True:
+        try:
+            # 5分鐘 = 300秒
+            await asyncio.sleep(300)
+            
+            data = load_data()
+            updated = False
+            
+            for uid in data:
+                monster = data[uid].get("monster")
+                if monster:
+                    current_stamina = monster.get("farm_stamina", 20)
+                    if current_stamina < 20:
+                        monster["farm_stamina"] = current_stamina + 1
+                        updated = True
+            
+            if updated:
+                save_data(data)
+                print("[while 系統] 已完成全體玩家農田耐力恢復(+1)")
+                
+        except Exception as e:
+            print(f"[while 系統] 發生錯誤: {e}")
 
 @gua.event
 async def on_ready():
@@ -181,6 +214,8 @@ async def on_ready():
     print("玩家資料更新完成")
 
     print(f"{gua.user} 已上線")
+    gua.loop.create_task(farm_stamina_recovery_loop())
+    print("成功將耐力恢復任務加入背景排程")
 
 @gua.event
 async def on_member_join(member):
@@ -552,6 +587,8 @@ async def get_player_or_reply(interaction):
         return None
 
     return data, uid, monster
+
+
 #----------------------------------------
 @gua.tree.command(
     name="reg",
@@ -732,18 +769,41 @@ async def mining(interaction):
 @gua.tree.command(name="planting", description="種植")
 async def planting(interaction):
 
-    data, uid, monster = get_player(interaction)
+    result = await get_player_or_reply(interaction)
 
-    if data is None:
-        await interaction.response.send_message(
-            f"{interaction.user.mention}請先使用 /reg 建立角色"
-        )
+    if result is None:
         return
+
+    data, uid, monster = result
 
     if monster["seed"] <= 0:
         await interaction.response.send_message(
             "請先購買種子"
         )
+        return
+    if monster["crow_event"]:
+        await interaction.response.send_message(
+        "農田有烏鴉！\n請先使用 /catchcrow"
+    )
+        return
+
+    # 農田耐力檢查
+    if monster["farm_stamina"] <= 0:
+        await interaction.response.send_message(
+            "農田耐力不足\n請等待恢復"
+        )
+        return
+    event = random.randint(1, 100)
+
+    if event <= 3:
+        monster["seed"] = max(0, monster["seed"] - 3)
+        monster["crow_event"] = True
+
+        save_data(data)
+
+        await interaction.response.send_message(
+        " 烏鴉來偷吃種子！\n請使用 /catchcrow 趕走牠"
+    )
         return
 
     luck = monster["luck"]
@@ -751,26 +811,89 @@ async def planting(interaction):
     cp = random.randint(0, luck)
     cr = cp * luck
 
+    event_msg = ""
+
+    # ===== 隨機事件 =====
+    crow_event = random.randint(1, 100)
+
+    # 5%
+    if crow_event <= 5:
+        cr *= 2
+        event_msg = "\n幸運豐收！本次收成 x2"
+
+    # 5%
+    elif crow_event <= 10:
+        cr = max(0, cr // 2)
+        event_msg = "\n遭遇蟲害！收成減半"
+
+    # 2%
+    elif crow_event <= 12:
+        data[uid]["money"] += 50
+        event_msg = "\n發現黃金馬鈴薯！獲得 50 呱"
+
     monster["seed"] -= 1
     monster["crop"] += cr
+    monster["farm_stamina"] -= 1
 
     levelup = add_exp(monster, 15)
 
     save_data(data)
 
     msg = (
-        f"種子:{monster['seed']}\n"
+        f"🌾 農田耐力：{monster['farm_stamina']}/20\n"
+        f"種子：{monster['seed']}\n"
         f"種出 {cr} 個馬鈴薯\n"
         f"目前共有 {monster['crop']} 個馬鈴薯\n"
-        f"等級:{monster['level']}\n"
-        f"EXP:{monster['exp']}/{monster['level']*100}"
+        f"等級：{monster['level']}\n"
+        f"EXP：{monster['exp']}/{monster['level']*100}"
     )
 
+    msg += event_msg
     msg += level_message(monster, levelup)
 
     await interaction.response.send_message(msg)
 
+#--------------------------------------------------------
+@gua.tree.command(
+    name="catchcrow",
+    description="趕走烏鴉"
+)
+async def catchcrow(interaction):
 
+    result = await get_player_or_reply(interaction)
+
+    if result is None:
+        return
+
+    data, uid, monster = result
+
+    if not monster["crow_event"]:
+        await interaction.response.send_message(
+            "目前沒有烏鴉"
+        )
+        return
+
+    monster["crow_event"] = False
+    reward = random.randint(1, 3)
+
+    if reward == 1:
+        data[uid]["money"] += 20
+        msg = "烏鴉掉了 20 呱"
+
+    elif reward == 2:
+        monster["seed"] += 3
+        msg = "烏鴉叼來了 3 顆種子"
+
+    else:
+        monster["crop"] += 5
+        msg = "烏鴉留下了 5 個馬鈴薯"
+
+    add_exp(monster, 5)
+
+    save_data(data)
+
+    await interaction.response.send_message(
+        f"成功趕走烏鴉！{msg}")
 #---------------------------------------------------------
 @gua.tree.command(
     name="buyseed",

@@ -219,7 +219,10 @@ async def on_ready():
 
 @gua.event
 async def on_member_join(member):
-    channel_id = 1385455325158838285  
+    if member.guild.id == 1385455324496134327:
+        channel_id = 1385455325158838285
+    else:
+        return
     channel = gua.get_channel(channel_id)
     if channel:
         print("有人加入")
@@ -1141,6 +1144,87 @@ async def levelrank(interaction):
 
     await interaction.response.send_message(msg)
 
+@gua.tree.command(
+    name="lottery",
+    description="大樂透1/1500"
+)
+async def lottery(interaction):
+    data, uid, monster = get_player(interaction)
+
+    if data is None:
+        await interaction.response.send_message(
+            f"{interaction.user.mention}請先使用 /reg 建立角色"
+        )
+        return
+
+    if data[uid]["money"] < 1500:
+        await interaction.response.send_message(
+            "你需要更多的呱"
+        )
+        return
+    data[uid]["money"] -= 1500
+    lottery = random.randint(0, 10)
+    if lottery <= 3:
+        data[uid]["money"] = 0
+        mgs = "產呱，金錢歸 **0**"
+    elif lottery == 4:
+        data[uid]["money"] *= 2
+        mgs = "雙倍呱，金錢 **×2**"
+    elif lottery in (5, 6):
+        data[uid]["money"] += 500
+        mgs = "發財呱，金錢 **+500**"
+    elif lottery in (7, 8):
+        data[uid]["money"] += 5000
+        mgs = "大獎呱，金錢 **+5000**"
+    elif lottery == 9:
+        data[uid]["money"] -= 500
+        mgs = "倒楣呱，金錢 **-500**"
+    else:  # lottery == 10
+        data[uid]["money"] -= 10000
+        mgs = "地獄呱，金錢 **-10000**"
+    save_data(data)
+    await interaction.response.send_message(
+        f"""
+恭喜抽到：{mgs}
+剩餘金錢：{data[uid]['money']} 呱
+"""
+    )
+    save_data(data)
+
+@gua.tree.command(
+    name="addmoney",
+    description="呱"
+)
+async def addmoney(
+    interaction: discord.Interaction,
+    玩家: discord.Member,
+    金額: int
+):
+    OWNER_ID = 1149703872424726558
+
+    if interaction.user.id != OWNER_ID:
+        await interaction.response.send_message(
+            "你沒有權限。",
+            ephemeral=True
+        )
+        return
+
+    data, _, _ = get_player(interaction)
+
+    uid = str(玩家.id)
+
+    if uid not in data:
+        await interaction.response.send_message(
+            f"{玩家.mention} 尚未建立角色。"
+        )
+        return
+
+    data[uid]["money"] += 金額
+    save_data(data)
+
+    await interaction.response.send_message(
+        f"已幫 {玩家.mention} 增加 {金額} 呱！"
+    )
 gua.run(TOKEN)
 
 """

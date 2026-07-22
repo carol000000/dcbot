@@ -1166,13 +1166,13 @@ async def lottery(interaction):
     lottery = random.randint(0, 10)
     if lottery <= 3:
         data[uid]["money"] = 0
-        mgs = "產呱，金錢歸 **0**"
+        mgs = "破產呱，金錢歸 **0**"
     elif lottery == 4:
         data[uid]["money"] *= 2
         mgs = "雙倍呱，金錢 **×2**"
     elif lottery in (5, 6):
-        data[uid]["money"] += 500
-        mgs = "發財呱，金錢 **+500**"
+        data[uid]["money"] += 2000
+        mgs = "發財呱，金錢 **+2000**"
     elif lottery in (7, 8):
         data[uid]["money"] += 5000
         mgs = "大獎呱，金錢 **+5000**"

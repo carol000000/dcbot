@@ -56,30 +56,40 @@ from datetime import date
 import time
 import os
 from dotenv import load_dotenv
+import sys
+
+sys.path.append("/home/gua/GuaAI")
+from ai import GuaAI
 
 load_dotenv()
 
 TOKEN = os.getenv("TOKEN")
-
-
-
-
 
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 
 
-
-
 class MyBot(commands.Bot):
     def __init__(self):
-        super().__init__(command_prefix="!", intents=intents)
+        super().__init__(
+            command_prefix="!",
+            intents=intents,
+        )
 
+        print("載入 AI...")
+        self.ai = GuaAI()
+        self.ai_lock = asyncio.Lock()
+
+        self.ai_cooldown = commands.CooldownMapping.from_cooldown(
+            1, 10, commands.BucketType.user
+        )
+
+        print("AI 載入完成！")
 
     async def setup_hook(self):
         await self.tree.sync()
-        print(f"斜線指令同步成功！")
+        print("斜線指令同步成功！")
 
 
 gua = MyBot()
@@ -216,7 +226,6 @@ async def on_ready():
     print(f"{gua.user} 已上線")
     gua.loop.create_task(farm_stamina_recovery_loop())
     print("成功將耐力恢復任務加入背景排程")
-
 @gua.event
 async def on_member_join(member):
     if member.guild.id == 1385455324496134327:
@@ -233,6 +242,60 @@ async def on_member_join(member):
 )
         embed.set_thumbnail(url=member.display_avatar.url) # 顯示新成員頭貼
         await channel.send(embed=embed)
+async def handle_ai(message):
+    if gua.user not in message.mentions:
+        return False
+
+    text = message.content.replace(
+        f"<@{gua.user.id}>",
+        ""
+    )
+
+    text = text.replace(
+        f"<@!{gua.user.id}>",
+        ""
+    )
+
+    text = text.strip()
+
+    if not text:
+        await message.reply("請輸入要問我的內容，呱。")
+        return True
+
+    if len(text) > 100:
+        await message.reply(
+            "問題太長了，請控制在 100 字以內，呱。"
+        )
+        return True
+
+
+    bucket = gua.ai_cooldown.get_bucket(message)
+    retry_after = bucket.update_rate_limit()
+
+    if retry_after:
+        await message.reply(
+            f"請 {retry_after:.1f} 秒後再問我，呱。"
+        )
+        return True
+
+
+    if gua.ai_lock.locked():
+        await message.reply(
+            "我正在思考其他人的問題，請稍後再試，呱。"
+        )
+        return True
+
+
+    async with gua.ai_lock:
+        async with message.channel.typing():
+            reply = await asyncio.to_thread(
+                gua.ai.chat,
+                text
+            )
+
+    await message.reply(reply)
+
+    return True
 @gua.event
 async def on_message(message):
     if message.author == gua.user:
@@ -314,7 +377,8 @@ async def on_message(message):
         await message.channel.send(f"{message.author.mention}罵髒話")
 
 ##-------------------------------------------------------------------------------------------------------------------------------------------------------
- 
+    await handle_ai(message)
+#---------------------------------------    
     # 被監控的頻道
     monitored_channel_id = 1410282161767972925
     # 通知管理員的頻道
@@ -1157,12 +1221,12 @@ async def lottery(interaction):
         )
         return
 
-    if data[uid]["money"] < 1500:
+    if data[uid]["money"] < 300:
         await interaction.response.send_message(
             "你需要更多的呱"
         )
         return
-    data[uid]["money"] -= 1500
+    data[uid]["money"] -= 300
     lottery = random.randint(0, 10)
     if lottery <= 3:
         data[uid]["money"] = 0

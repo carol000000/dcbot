@@ -58,7 +58,8 @@ import os
 from dotenv import load_dotenv
 import sys
 
-sys.path.append("/home/gua/GuaAI")
+sys.path.append("/home/gua/GuaAI-Qwen")
+
 from ai import GuaAI
 
 load_dotenv()
@@ -1210,7 +1211,7 @@ async def levelrank(interaction):
 
 @gua.tree.command(
     name="lottery",
-    description="大樂透1/1500"
+    description="大樂透1/300"
 )
 async def lottery(interaction):
     data, uid, monster = get_player(interaction)

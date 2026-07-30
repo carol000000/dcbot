@@ -2,3 +2,5 @@
 dcBot/.env
 __pycache__/
 *.pyc
+dcBot/ai_history/
+*.json

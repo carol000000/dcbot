@@ -3,4 +3,7 @@ dcBot/.env
 __pycache__/
 *.pyc
 dcBot/ai_history/
+dcBot/*.json
 *.json
+dcBot/修改範本.md
+dcBot/開發指南.md

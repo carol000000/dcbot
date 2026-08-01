@@ -139,7 +139,7 @@ def register(bot):
         levelup = add_exp(monster, 10); save_data(data)
         msg = (f"{interaction.user.mention} 每日簽到成功！\n獲得 50 呱！\n目前有 {data[uid]['money']} 呱\n"
                f"耐力恢復至 {monster['atk']}\nHP恢復至 {monster['hp']}/{monster['max_hp']}\n"
-               f"經驗值：{monster['exp']}/{monster['level'] * 100}\n等級：{monster['level']}\n每天早上 8 點重置")
+               f"經驗值：{monster['exp']}/{monster['level'] * 100}\n等級：{monster['level']}\n")
         await interaction.response.send_message(msg + level_message(monster, levelup))
 
     @bot.tree.command(name="mining", description="挖礦")
@@ -243,15 +243,42 @@ def register(bot):
         data, uid, monster = result
         if data[uid]["money"] < 300:
             await interaction.response.send_message("你需要更多的呱"); return
-        data[uid]["money"] -= 300; roll = random.randint(0, 10)
-        if roll <= 3: data[uid]["money"] = 0; msg = "破產呱，金錢歸 **0**"
-        elif roll == 4: data[uid]["money"] *= 2; msg = "雙倍呱，金錢 **×2**"
-        elif roll <= 6: data[uid]["money"] += 2000; msg = "發財呱，金錢 **+2000**"
-        elif roll <= 8: data[uid]["money"] += 5000; msg = "大獎呱，金錢 **+5000**"
-        elif roll == 9: data[uid]["money"] -= 500; msg = "倒楣呱，金錢 **-500**"
-        else: data[uid]["money"] -= 10000; msg = "地獄呱，金錢 **-10000**"
+
+        data[uid]["money"] -= 300
+        roll = random.randint(1, 100)   
+
+        if roll <= 3:          # 3%
+            data[uid]["money"] *= 2
+            msg = "雙倍呱，金錢 ×2"
+
+        elif roll <= 23:       # 20%
+            data[uid]["money"] = 0
+            msg = "破產呱，金錢歸 0"
+
+        elif roll <= 30:       # 7%
+            data[uid]["money"] += 2000
+            msg = "呱呱呱，金錢 +2000"
+
+        elif roll <= 45:       # 15%
+            data[uid]["money"] += 1000
+            msg = "大獎呱，金錢 +1000"
+
+        elif roll <= 65:       # 20%
+            data[uid]["money"] += 500
+            msg = "發財呱，金錢 +500"
+
+        elif roll <= 85:       # 20%
+            data[uid]["money"] -= 200
+            msg = "倒楣呱，金錢 -200"
+
+        else:                  # 15%
+            data[uid]["money"] += 100
+            msg = "安慰獎，金錢 +100"
+
         save_data(data)
-        await interaction.response.send_message(f"恭喜抽到：{msg}\n剩餘金錢：{data[uid]['money']} 呱")
+        await interaction.response.send_message(
+    f"恭喜抽到：{msg}\n剩餘金錢：{data[uid]['money']} 呱"
+)
 
     @bot.tree.command(name="addmoney", description="呱")
     async def addmoney(interaction: discord.Interaction, 玩家: discord.Member, 金額: int):

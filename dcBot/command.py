@@ -14,6 +14,11 @@ def register(bot):
     async def fortune(interaction: discord.Interaction):
         await interaction.response.send_message(random.choice(["吉", "普", "凶"]))
 
+    
+    @bot.tree.command(name="help",description="機器人幫助")
+    async def fortune(interaction: discord.Interaction):
+        await interaction.response.send_message("https://guatw.net/iteam/html/dcbot.html")
+    
     async def on_member_join(member):
         welcome = config["member_welcome"]
         if member.guild.id != welcome["guild_id"]:

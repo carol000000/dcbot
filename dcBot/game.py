@@ -1,5 +1,3 @@
-"""不使用玩家資料的迷你遊戲指令。"""
-
 import asyncio
 import random
 import discord
@@ -7,7 +5,6 @@ import discord
 
 def register(bot):
     async def play_number_guess(message):
-        """保留原本直接輸入「猜數字」啟動遊戲的方式。"""
         answer, count = random.randint(1, 100), 0
         await message.channel.send(f"{message.author.mention}1~100")
 

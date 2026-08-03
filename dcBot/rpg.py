@@ -277,7 +277,7 @@ def register(bot):
             return
         # 根據投入金額決定倍率
         if amount < 500:
-            multiplier = random.uniform(0.8, 1.2)
+            multiplier = random.randint(16, 24) / 20
         elif amount < 3000:
             multiplier = random.uniform(0.5, 1.5)
         elif amount < 10000:

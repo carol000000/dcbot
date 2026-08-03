@@ -46,7 +46,7 @@ def load_id_config():
 
 class MyBot(commands.Bot):
     def __init__(self):
-        super().__init__(command_prefix="!", intents=intents)
+        super().__init__(command_prefix="ξ", intents=intents)
         self.id_config = load_id_config()
         print("=== AI CONFIG ===")
         print(self.id_config["ai"])

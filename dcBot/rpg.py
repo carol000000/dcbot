@@ -236,50 +236,73 @@ def register(bot):
     register_rank("mrank", "金錢排行榜", "money", "金錢排行榜", "")
     register_rank("lrank", "等級排行榜", "level", "等級排行榜", "Lv.")
 
-    @bot.tree.command(name="lottery", description="大樂透1/300")
+    @bot.tree.command(name="抽獎", description="1/200")
     async def lottery(interaction):
         result = await get_player_or_reply(interaction)
         if result is None: return
         data, uid, monster = result
-        if data[uid]["money"] < 300:
+        if data[uid]["money"] < 200:
             await interaction.response.send_message("你需要更多的呱"); return
 
-        data[uid]["money"] -= 300
+        data[uid]["money"] -= 200
         roll = random.randint(1, 100)   
-
-        if roll <= 3:          # 3%
+        if roll <= 3:
             data[uid]["money"] *= 2
-            msg = "雙倍呱，金錢 ×2"
-
-        elif roll <= 23:       # 20%
-            data[uid]["money"] = 0
-            msg = "破產呱，金錢歸 0"
-
-        elif roll <= 30:       # 7%
-            data[uid]["money"] += 2000
-            msg = "呱呱呱，金錢 +2000"
-
-        elif roll <= 45:       # 15%
-            data[uid]["money"] += 1000
-            msg = "大獎呱，金錢 +1000"
-
-        elif roll <= 65:       # 20%
+            msg = "雙倍呱 **×2**"
+        elif roll <= 47:
             data[uid]["money"] += 500
-            msg = "發財呱，金錢 +500"
-
-        elif roll <= 85:       # 20%
-            data[uid]["money"] -= 200
-            msg = "倒楣呱，金錢 -200"
-
-        else:                  # 15%
-            data[uid]["money"] += 100
-            msg = "安慰獎，金錢 +100"
+            msg = "中獎呱 **+500**"
+        else:
+            data[uid]["money"] += 0
+            msg = "下次再來"
 
         save_data(data)
         await interaction.response.send_message(
     f"恭喜抽到：{msg}\n剩餘金錢：{data[uid]['money']} 呱"
 )
 
+    @bot.tree.command(name="lottery", description="大樂透")
+    @app_commands.describe(amount="投入金額")
+    async def lottery(interaction: discord.Interaction, amount: int):
+
+        result = await get_player_or_reply(interaction)
+        if result is None:
+            return
+        data, uid, monster = result
+        if amount <= 0:
+            await interaction.response.send_message("金額必須大於 0")
+            return
+        if data[uid]["money"] < amount:
+            await interaction.response.send_message("你的錢不夠！")
+            return
+        # 根據投入金額決定倍率
+        if amount < 500:
+            multiplier = random.uniform(0.8, 1.2)
+        elif amount < 3000:
+            multiplier = random.uniform(0.5, 1.5)
+        elif amount < 10000:
+            multiplier = random.uniform(0.3, 1.7)
+        else:
+            multiplier = random.uniform(0.0, 2.0)
+
+        # 扣本金
+        data[uid]["money"] -= amount
+
+        # 計算獲得金額
+        reward = int(amount * multiplier)
+
+        # 加回去
+        data[uid]["money"] += reward
+
+        save_data(data)
+
+        await interaction.response.send_message(
+        f"大樂透結果\n"
+        f"投入：{amount} 呱\n"
+        f"倍率：{multiplier:.2f}x\n"
+        f"獲得：{reward} 呱\n"
+        f"剩餘金錢：{data[uid]['money']} 呱"
+    )
     @bot.tree.command(name="addmoney", description="呱")
     async def addmoney(interaction: discord.Interaction, 玩家: discord.Member, 金額: int):
         if interaction.user.id != admin_user_id:

@@ -137,6 +137,8 @@ def build_ai_prompt(prompt, history, character_limit):
 
 
 async def handle_ai(bot, message):
+    if message.author.bot:
+        return
     """處理 @ 機器人的 AI 提問；已處理時回傳 True。"""
     if bot.user not in message.mentions:
         return False

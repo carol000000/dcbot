@@ -277,19 +277,19 @@ def register(bot):
             return
         # 根據投入金額決定倍率
         if amount < 500:
-            multiplier = random.randint(16, 24) / 20
+            multiplier = random.randint(80, 120)   # 0.80 ~ 1.20
         elif amount < 3000:
-            multiplier = random.uniform(0.5, 1.5)
+            multiplier = random.randint(50, 150)   # 0.50 ~ 1.50
         elif amount < 10000:
-            multiplier = random.uniform(0.3, 1.7)
+            multiplier = random.randint(30, 170)   # 0.30 ~ 1.70
         else:
-            multiplier = random.uniform(0.0, 2.0)
+            multiplier = random.randint(0, 200)    # 0.00 ~ 2.00
 
         # 扣本金
         data[uid]["money"] -= amount
 
         # 計算獲得金額
-        reward = int(amount * multiplier)
+        reward = amount * multiplier // 100
 
         # 加回去
         data[uid]["money"] += reward

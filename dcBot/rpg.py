@@ -295,11 +295,12 @@ def register(bot):
         data[uid]["money"] += reward
 
         save_data(data)
+        c = multiplier /100
 
         await interaction.response.send_message(
         f"大樂透結果\n"
         f"投入：{amount} 呱\n"
-        f"倍率：{multiplier:.2f}x\n"
+        f"倍率：{c}x\n"
         f"獲得：{reward} 呱\n"
         f"剩餘金錢：{data[uid]['money']} 呱"
     )

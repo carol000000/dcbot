@@ -22,7 +22,7 @@ def register(bot):
         greetings = {
             "早安": ["要玩'猜數字'嗎?", "祝你有美好的一天", "試試看輸入'運勢'"],
             "午安": ["要玩'猜數字'嗎?", "午餐想吃啥？", "要不要輸入'運勢'"],
-            "晚安": ["要通霄嗎？", "祝你一覺到天亮", "拉屎中"],
+            "晚安": ["要通霄嗎？", "祝你一覺到天亮", "女裝嗎"],
         }
         for trigger, replies in greetings.items():
             if content.startswith(trigger):

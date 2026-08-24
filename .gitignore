@@ -5,3 +5,4 @@ __pycache__/
 dcBot/ai_history/
 dcBot/*.json
 *.json
+dcBot/id.json

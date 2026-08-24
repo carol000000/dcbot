@@ -20,12 +20,16 @@ def register(bot):
         await interaction.response.send_message("https://guatw.net/iteam/html/dcbot.html")
     
     async def on_member_join(member):
-        welcome = config["member_welcome"]
-        if member.guild.id != welcome["guild_id"]:
+        welcome_configs = config["member_welcome"]
+        welcome = welcome_configs.get(str(member.guild.id))
+        if not welcome:
             return
         channel = bot.get_channel(welcome["channel_id"])
         if channel:
-            embed = discord.Embed(title="有人進來了", description=f"歡迎 {member.mention} 加入！", color=discord.Color.green())
+            embed = discord.Embed(
+                title="有人進來了",
+                description=f"歡迎 {member.mention} 加入！",
+                color=discord.Color.green())
             embed.set_thumbnail(url=member.display_avatar.url)
             await channel.send(embed=embed)
 
